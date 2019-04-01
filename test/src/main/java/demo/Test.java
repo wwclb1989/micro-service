@@ -9,7 +9,7 @@ public class Test {
 		Scanner scanner = new Scanner(System.in);
 
 		int number = scanner.nextInt();
-
+		System.out.println("test");
 		// 用来统计数量吧~
 		int count = 0;
 
