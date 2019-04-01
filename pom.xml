@@ -19,6 +19,8 @@
         <module>test</module>
         <module>flink</module>
         <module>mongodb</module>
+        <module>kafka</module>
+        <module>kafka-imooc</module>
     </modules>
 
     <dependencyManagement>
