@@ -22,6 +22,7 @@
         <module>kafka</module>
         <module>kafka-imooc</module>
         <module>redis</module>
+        <module>motan</module>
     </modules>
 
     <dependencyManagement>
