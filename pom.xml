@@ -21,6 +21,7 @@
         <module>mongodb</module>
         <module>kafka</module>
         <module>kafka-imooc</module>
+        <module>redis</module>
     </modules>
 
     <dependencyManagement>
