@@ -23,6 +23,7 @@
         <module>kafka-imooc</module>
         <module>redis</module>
         <module>motan</module>
+        <module>fastdfs</module>
     </modules>
 
     <dependencyManagement>
