@@ -9,13 +9,11 @@ import java.sql.*;
 
 public class Test12 {
 
-    public static final String HOST = "172.18.5.101";   // 主机
+    public static final String HOST = "localhost";   // 主机
     public static final String PORT = "3306";           // mysql端口号
-    public static final String[] DB_NAME = {"carorder", "confservice", "driver",
-            "driverstats", "finance", "orgservice", "passenger", "mapservice", "orgservice",
-            "paygateway", "recommend", "thirdplatform", "workflow"};    // 数据库名称
-    public static final String USERNAME = "pubuser";    // 用户
-    public static final String PASSWORD = "nh7lTVh5f9HFgjczHChvmqQcSQjE62";     // 密码
+    public static final String[] DB_NAME = {"manager"};    // 数据库名称
+    public static final String USERNAME = "root";    // 用户
+    public static final String PASSWORD = "root";     // 密码
 
     public static final String DIRECTORYPATH = "F://数据库表关联关系/自动生成/";      // 输出路径
 
