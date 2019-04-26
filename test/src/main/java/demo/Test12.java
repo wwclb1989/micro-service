@@ -9,85 +9,75 @@ import java.sql.*;
 
 public class Test12 {
 
-//    public static final String URL = "jdbc:mysql://localhost:3306/manager?characterEncoding=UTF-8&serverTimezone=UTC&useSSL=false";
-    public static final String URL = "jdbc:mysql://172.18.5.101:3306/activity?characterEncoding=UTF-8&serverTimezone=UTC&useSSL=false";
-    public static final String USERNAME = "pubuser";
-    public static final String PASSWORD = "nh7lTVh5f9HFgjczHChvmqQcSQjE62";
+    public static final String HOST = "172.18.5.101";   // 主机
+    public static final String PORT = "3306";           // mysql端口号
+    public static final String[] DB_NAME = {"carorder", "confservice", "driver",
+            "driverstats", "finance", "orgservice", "passenger", "mapservice", "orgservice",
+            "paygateway", "recommend", "thirdplatform", "workflow"};    // 数据库名称
+    public static final String USERNAME = "pubuser";    // 用户
+    public static final String PASSWORD = "nh7lTVh5f9HFgjczHChvmqQcSQjE62";     // 密码
 
-    public static final String DIRECTORYPATH = "F://";
+    public static final String DIRECTORYPATH = "F://数据库表关联关系/自动生成/";      // 输出路径
 
     public static void main(String[] args) {
 
         try {
             //1.加载驱动程序
             Class.forName("com.mysql.jdbc.Driver");
-            //2. 获得数据库连接
-            Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
-            //3.操作数据库，实现增删改查
-            PreparedStatement pst = conn.prepareStatement("show tables");
+            for (String dbname : DB_NAME) {
+                String url = "jdbc:mysql://" + HOST + ":" + PORT + "/" + dbname + "?characterEncoding=UTF-8&serverTimezone=UTC&useSSL=false";
+                //2. 获得数据库连接
+                Connection conn = DriverManager.getConnection(url, USERNAME, PASSWORD);
+                //3.操作数据库，实现增删改查
+                PreparedStatement pst = conn.prepareStatement("show tables");
 
-            String filePath = DIRECTORYPATH + "activity.xls";   // 文件路径，一个数据库一个文件
-            FileOutputStream out = new FileOutputStream(filePath);  // 文件输出流
+                String filePath = DIRECTORYPATH + dbname + ".xls";   // 文件路径，一个数据库一个文件
+                FileOutputStream out = new FileOutputStream(filePath);  // 文件输出流
 
-            // 创建工作簿
-            HSSFWorkbook workbook = new HSSFWorkbook();     // 创建workbook
-            HSSFSheet sheet = workbook.createSheet();       // 创建sheet
-            CellStyle style1 = createStyle1(workbook);
-            CellStyle style2 = createStyle2(workbook);
-            CellStyle style3 = createStyle3(workbook);
-            createTableHead(sheet, style1);
+                // 创建工作簿
+                HSSFWorkbook workbook = new HSSFWorkbook();     // 创建workbook
+                HSSFSheet sheet = workbook.createSheet();       // 创建sheet
+                CellStyle style1 = createStyle1(workbook);
+                CellStyle style2 = createStyle2(workbook);
+                CellStyle style3 = createStyle3(workbook);
+                createTableHead(sheet, style1);
 
-            int rowNum = 1;
+                int rowNum = 1;
 
-            ResultSet resultSet = pst.executeQuery();
-            while (resultSet.next()) {
-                // 表名
-                String tableName = resultSet.getString(1);
-                Statement st = conn.createStatement();
-                ResultSet rs = st.executeQuery("show full columns from " + tableName);
-                int colNum = 0; // 字段的个数
+                ResultSet resultSet = pst.executeQuery();
+                while (resultSet.next()) {
+                    // 表名
+                    String tableName = resultSet.getString(1);
+                    Statement st = conn.createStatement();
+                    ResultSet rs = st.executeQuery("show full columns from " + tableName);
+                    int colNum = 0; // 字段的个数
 
-
-                while (rs.next()) {
-                    HSSFRow row = sheet.createRow(rowNum++);
-                    HSSFCell cell0 = row.createCell(0);
-                    if (colNum == 0) {
-                        cell0.setCellValue(tableName);
+                    while (rs.next()) {
+                        HSSFRow row = sheet.createRow(rowNum++);
+                        HSSFCell cell0 = row.createCell(0);
+                        if (colNum == 0) {
+                            cell0.setCellValue(tableName);
+                        }
+                        cell0.setCellStyle(style2);
+                        createRow(row, rs, style3);
+                        colNum++;
                     }
-                    cell0.setCellStyle(style2);
-                    HSSFCell cell1 = row.createCell(1);
-                    cell1.setCellValue(rs.getString("Field"));
-                    cell1.setCellStyle(style3);
-                    HSSFCell cell2 = row.createCell(2);
-                    cell2.setCellValue(rs.getString("Type"));
-                    cell2.setCellStyle(style3);
-                    HSSFCell cell3 = row.createCell(3);
-                    cell3.setCellValue(rs.getString("Null"));
-                    cell3.setCellStyle(style3);
-                    HSSFCell cell4 = row.createCell(4);
-                    cell4.setCellValue(rs.getString("Key"));
-                    cell4.setCellStyle(style3);
-                    HSSFCell cell5 = row.createCell(5);
-                    cell5.setCellValue(rs.getString("Default"));
-                    cell5.setCellStyle(style3);
-                    HSSFCell cell6 = row.createCell(6);
-                    cell6.setCellValue(rs.getString("Comment"));
-                    cell6.setCellStyle(style3);
-                    colNum++;
+
+                    // 合并单元格
+                    CellRangeAddress cra = new CellRangeAddress(rowNum - colNum, rowNum - 1, 0, 0); // 起始行, 终止行, 起始列, 终止列
+                    sheet.addMergedRegion(cra);
+
+                    HSSFRow sep = sheet.createRow(rowNum++);
+                    sep.createCell(0).setCellStyle(style1);
+                    CellRangeAddress cra2 = new CellRangeAddress(rowNum - 1, rowNum - 1, 0, 6); // 起始行, 终止行, 起始列, 终止列
+                    sheet.addMergedRegion(cra2);
                 }
-
-                // 合并单元格
-                CellRangeAddress cra = new CellRangeAddress(rowNum - colNum, rowNum - 1, 0, 0); // 起始行, 终止行, 起始列, 终止列
-                sheet.addMergedRegion(cra);
-
-                HSSFRow sep = sheet.createRow(rowNum++);
-                sep.createCell(0).setCellStyle(style1);
-                CellRangeAddress cra2 = new CellRangeAddress(rowNum - 1, rowNum - 1, 0, 6); // 起始行, 终止行, 起始列, 终止列
-                sheet.addMergedRegion(cra2);
+                workbook.write(out);//保存Excel文件
+                out.close();//关闭文件流
+                resultSet.close();
+                pst.close();
+                conn.close();
             }
-            workbook.write(out);//保存Excel文件
-            out.close();//关闭文件流
-//            stmt.execute("show full columns from sysuser")
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -140,6 +130,8 @@ public class Test12 {
         style1.setBorderLeft(BorderStyle.THIN);
         style1.setBorderRight(BorderStyle.THIN);
         style1.setBorderTop(BorderStyle.THIN);
+        style1.setVerticalAlignment(VerticalAlignment.CENTER);//垂直
+        style1.setAlignment(HorizontalAlignment.CENTER);//水平
         return style1;
     }
 
@@ -164,5 +156,26 @@ public class Test12 {
         style3.setBorderTop(BorderStyle.THIN);
         style3.setWrapText(true);
         return style3;
+    }
+
+    public static void createRow(HSSFRow row, ResultSet rs, CellStyle style3) throws SQLException {
+        HSSFCell cell1 = row.createCell(1);
+        cell1.setCellValue(rs.getString("Field"));
+        cell1.setCellStyle(style3);
+        HSSFCell cell2 = row.createCell(2);
+        cell2.setCellValue(rs.getString("Type"));
+        cell2.setCellStyle(style3);
+        HSSFCell cell3 = row.createCell(3);
+        cell3.setCellValue(rs.getString("Null"));
+        cell3.setCellStyle(style3);
+        HSSFCell cell4 = row.createCell(4);
+        cell4.setCellValue(rs.getString("Key"));
+        cell4.setCellStyle(style3);
+        HSSFCell cell5 = row.createCell(5);
+        cell5.setCellValue(rs.getString("Default"));
+        cell5.setCellStyle(style3);
+        HSSFCell cell6 = row.createCell(6);
+        cell6.setCellValue(rs.getString("Comment"));
+        cell6.setCellStyle(style3);
     }
 }
