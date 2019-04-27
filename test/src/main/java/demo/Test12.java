@@ -9,13 +9,18 @@ import java.sql.*;
 
 public class Test12 {
 
-    public static final String HOST = "localhost";   // 主机
-    public static final String PORT = "3306";           // mysql端口号
-    public static final String[] DB_NAME = {"manager"};    // 数据库名称
-    public static final String USERNAME = "root";    // 用户
-    public static final String PASSWORD = "root";     // 密码
+    public static final String HOST = "172.18.5.200";   // 主机
+    public static final String PORT = "8066";           // mysql端口号
+    public static final String[] DB_NAME = {
+            "activity", "carorder", "carorderstats", "channelservice", "confservice",
+            "driver", "driverstats", "fileexport", "finance", "manager",
+            "mapservice", "openplatform", "orgservice", "passenger", "paygateway",
+            "recommend", "safecenter", "thirdplatform", "traffic", "workflow"
+    };    // 数据库名称
+    public static final String USERNAME = "wanshun";    // 用户
+    public static final String PASSWORD = "Hi1uwT3SiILdX#2LGYAf";     // 密码
 
-    public static final String DIRECTORYPATH = "F://数据库表关联关系/自动生成/";      // 输出路径
+    public static final String DIRECTORYPATH = "F://";      // 输出路径
 
     public static void main(String[] args) {
 
@@ -25,7 +30,13 @@ public class Test12 {
             for (String dbname : DB_NAME) {
                 String url = "jdbc:mysql://" + HOST + ":" + PORT + "/" + dbname + "?characterEncoding=UTF-8&serverTimezone=UTC&useSSL=false";
                 //2. 获得数据库连接
-                Connection conn = DriverManager.getConnection(url, USERNAME, PASSWORD);
+                Connection conn = null;
+                try {
+                    conn = DriverManager.getConnection(url, USERNAME, PASSWORD);
+                } catch (SQLException e) {
+                    System.out.println(e.getMessage());
+                    continue;
+                }
                 //3.操作数据库，实现增删改查
                 PreparedStatement pst = conn.prepareStatement("show tables");
 
@@ -47,7 +58,13 @@ public class Test12 {
                     // 表名
                     String tableName = resultSet.getString(1);
                     Statement st = conn.createStatement();
-                    ResultSet rs = st.executeQuery("show full columns from " + tableName);
+                    ResultSet rs = null;
+                    try {
+                        rs = st.executeQuery("show full columns from " + tableName);
+                    } catch (SQLException e) {
+                        System.out.println(e.getMessage());
+                        continue;
+                    }
                     int colNum = 0; // 字段的个数
 
                     while (rs.next()) {
@@ -176,4 +193,5 @@ public class Test12 {
         cell6.setCellValue(rs.getString("Comment"));
         cell6.setCellStyle(style3);
     }
+
 }
