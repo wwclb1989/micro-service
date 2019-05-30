@@ -20,7 +20,7 @@ public class Test12 {
     public static final String USERNAME = "wanshun";    // 用户
     public static final String PASSWORD = "Hi1uwT3SiILdX#2LGYAf";     // 密码
 
-    public static final String DIRECTORYPATH = "F://";      // 输出路径
+    public static final String DIRECTORYPATH = "F://table/";      // 输出路径
 
     public static void main(String[] args) {
 
@@ -37,8 +37,9 @@ public class Test12 {
                     System.out.println(e.getMessage());
                     continue;
                 }
-                //3.操作数据库，实现增删改查
-                PreparedStatement pst = conn.prepareStatement("show tables");
+                //3.操作数据库，实现增删改查,show tables
+//                PreparedStatement pst = conn.prepareStatement("show tables");
+                PreparedStatement pst = conn.prepareStatement("select table_name,table_comment from information_schema.tables where table_schema = '" + dbname + "'");
 
                 String filePath = DIRECTORYPATH + dbname + ".xls";   // 文件路径，一个数据库一个文件
                 FileOutputStream out = new FileOutputStream(filePath);  // 文件输出流
@@ -57,12 +58,17 @@ public class Test12 {
                 while (resultSet.next()) {
                     // 表名
                     String tableName = resultSet.getString(1);
+                    String tableComment = resultSet.getString(2);
+//                    String tableComment = null;
+                    if (tableComment == null || tableComment.equals("")) {
+                        tableComment = "无";
+                    }
                     Statement st = conn.createStatement();
                     ResultSet rs = null;
                     try {
                         rs = st.executeQuery("show full columns from " + tableName);
                     } catch (SQLException e) {
-                        System.out.println(e.getMessage());
+                        System.out.println(dbname + "->" + tableName);
                         continue;
                     }
                     int colNum = 0; // 字段的个数
@@ -71,7 +77,7 @@ public class Test12 {
                         HSSFRow row = sheet.createRow(rowNum++);
                         HSSFCell cell0 = row.createCell(0);
                         if (colNum == 0) {
-                            cell0.setCellValue(tableName);
+                            cell0.setCellValue(tableName + "\n(" + tableComment + ")");
                         }
                         cell0.setCellStyle(style2);
                         createRow(row, rs, style3);
@@ -160,6 +166,7 @@ public class Test12 {
         style2.setBorderTop(BorderStyle.THIN);
         style2.setVerticalAlignment(VerticalAlignment.CENTER);//垂直
         style2.setAlignment(HorizontalAlignment.CENTER);//水平
+        style2.setWrapText(true);
         return style2;
     }
 
