@@ -38,8 +38,8 @@ public class Test12 {
                     continue;
                 }
                 //3.操作数据库，实现增删改查,show tables
-//                PreparedStatement pst = conn.prepareStatement("show tables");
-                PreparedStatement pst = conn.prepareStatement("select table_name,table_comment from information_schema.tables where table_schema = '" + dbname + "'");
+                PreparedStatement pst = conn.prepareStatement("show tables");
+//                PreparedStatement pst = conn.prepareStatement("select table_name,table_comment from information_schema.tables where table_schema = '" + dbname + "'");
 
                 String filePath = DIRECTORYPATH + dbname + ".xls";   // 文件路径，一个数据库一个文件
                 FileOutputStream out = new FileOutputStream(filePath);  // 文件输出流
@@ -58,8 +58,8 @@ public class Test12 {
                 while (resultSet.next()) {
                     // 表名
                     String tableName = resultSet.getString(1);
-                    String tableComment = resultSet.getString(2);
-//                    String tableComment = null;
+//                    String tableComment = resultSet.getString(2);
+                    String tableComment = null;
                     if (tableComment == null || tableComment.equals("")) {
                         tableComment = "无";
                     }
