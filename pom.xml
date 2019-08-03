@@ -24,6 +24,7 @@
         <module>redis</module>
         <module>motan</module>
         <module>fastdfs</module>
+        <module>thread</module>
     </modules>
 
     <dependencyManagement>
