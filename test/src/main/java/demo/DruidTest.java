@@ -2,6 +2,7 @@ package demo;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.pool.DruidPooledConnection;
+import com.alibaba.druid.pool.GetConnectionTimeoutException;
 import org.springframework.util.StringUtils;
 
 import java.io.FileInputStream;
@@ -11,10 +12,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class DruidTest {
 
+    private volatile static int count;
+
     public static void main(String[] args) throws Exception {
+
         Properties prop = new Properties();
         // 加载配置文件
         prop.load(new FileInputStream("/data/jdbc.properties"));
@@ -27,7 +32,7 @@ public class DruidTest {
         dataSource.setUsername(prop.getProperty("username"));           // username
         dataSource.setPassword(prop.getProperty("password"));           // password
         System.out.println("url:" + prop.getProperty("url"));
-        System.out.println("username:" + prop.getProperty("username") + ",password:" + prop.getProperty("password"));
+        System.out.println("username:" + prop.getProperty("username") + ", password:" + prop.getProperty("password"));
         // 其它参数
         if (!StringUtils.isEmpty(prop.getProperty("initialSize"))) {
             dataSource.setInitialSize(Integer.parseInt(prop.getProperty("initialSize")));
@@ -68,32 +73,46 @@ public class DruidTest {
         }
 
         String sql = prop.getProperty("sql");
+        System.out.println("sql:" + sql);
 
-//        int requestNumber = Integer.parseInt(prop.getProperty("requestNumber"));
+        // id范围
         int min = Integer.parseInt(prop.getProperty("min"));
         int max = Integer.parseInt(prop.getProperty("max"));
 
+        Runnable r = () -> {
+            int i = 0;
+            while (true) {
+                i++;
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                System.out.println("已执行" + i + "秒，请求总数：" + count + "，QPS：" + (count / i));
+            }
+
+        };
+        new Thread(r).start();
 
         Runnable runnable = () -> {
-            try {
-                Connection conn = dataSource.getConnection();
-
-                // 执行语句
-                for (int i = min; i <= max; i++) {
+//            System.out.println("线程" + Thread.currentThread().getName() + "启动！");
+            Connection conn = null;
+            for (int i = min; i <= max; i++) {
+                try {
+                    // 执行语句
+                    conn = dataSource.getConnection();
                     PreparedStatement pst = conn.prepareStatement(sql);
+                    count++;
                     pst.setInt(1, i);
-                    System.out.println("线程" + Thread.currentThread().getName() + "请求sql:" + pst);
                     pst.execute();
-                    ResultSet resultSet = pst.executeQuery();
-                    while(resultSet.next()){
-                        System.out.println(resultSet.getString("name"));
-                        System.out.println(resultSet.getString("phone"));
-                    }
-
+                    conn.close();
+                } catch (GetConnectionTimeoutException e) {
+                    System.out.println(Thread.currentThread().getName() + "线程连接超时！");
+                } catch (SQLException e) {
+                    System.out.println(Thread.currentThread().getName() + "线程执行sql发生异常！");
                 }
-            } catch (SQLException e) {
-                e.printStackTrace();
             }
+            System.out.println("线程" + Thread.currentThread().getName() + "运行结束！");
         };
 
         int threadNumber = Integer.parseInt(prop.getProperty("threadNumber"));
@@ -102,4 +121,5 @@ public class DruidTest {
         }
 
     }
+
 }
