@@ -1,20 +1,21 @@
 package demo;
 
 import com.alibaba.druid.pool.DruidDataSource;
-import com.alibaba.druid.pool.DruidPooledConnection;
 import com.alibaba.druid.pool.GetConnectionTimeoutException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
 import java.io.FileInputStream;
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class DruidTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(DruidTest.class);
 
     private volatile static int count;
 
@@ -25,6 +26,29 @@ public class DruidTest {
         prop.load(new FileInputStream("/data/jdbc.properties"));
 
         // 创建连接池
+        DruidDataSource dataSource = getDataSource(prop);
+
+        // sql
+        String[] sqls = prop.getProperty("sqls").split(";");
+        Arrays.stream(sqls).forEach(s -> logger.warn("sql:{}", s));
+
+        // id范围
+        String[] mins = prop.getProperty("min").split(";");
+        String[] maxs = prop.getProperty("max").split(";");
+
+        // 开始计数
+//        startCount();
+
+        int threadNumber = Integer.parseInt(prop.getProperty("threadNumber"));
+        for (int i = 0; i < threadNumber; i++) {
+            for (int j = 0; j < sqls.length; j++) {
+                startRequest(dataSource, sqls[j], Integer.parseInt(mins[j]), Integer.parseInt(maxs[j]));
+            }
+        }
+
+    }
+
+    private static DruidDataSource getDataSource(Properties prop) throws SQLException {
         DruidDataSource dataSource = new DruidDataSource();
 
         dataSource.setDriverClassName(prop.getProperty("driverName"));  // 驱动
@@ -36,6 +60,9 @@ public class DruidTest {
         // 其它参数
         if (!StringUtils.isEmpty(prop.getProperty("initialSize"))) {
             dataSource.setInitialSize(Integer.parseInt(prop.getProperty("initialSize")));
+        }
+        if (!StringUtils.isEmpty(prop.getProperty("filters"))) {
+            dataSource.setFilters(prop.getProperty("filters"));
         }
         if (!StringUtils.isEmpty(prop.getProperty("maxActive"))) {
             dataSource.setMaxActive(Integer.parseInt(prop.getProperty("maxActive")));
@@ -72,13 +99,11 @@ public class DruidTest {
             dataSource.setTestWhileIdle(Boolean.parseBoolean(prop.getProperty("TestWhileIdle")));
         }
 
-        String sql = prop.getProperty("sql");
-        System.out.println("sql:" + sql);
+        return dataSource;
+    }
 
-        // id范围
-        int min = Integer.parseInt(prop.getProperty("min"));
-        int max = Integer.parseInt(prop.getProperty("max"));
-
+    private static void startCount() {
+        // 记数线程
         Runnable r = () -> {
             int i = 0;
             while (true) {
@@ -88,38 +113,48 @@ public class DruidTest {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                System.out.println("已执行" + i + "秒，请求总数：" + count + "，QPS：" + (count / i));
+                logger.warn("已执行{}秒，请求总数：{}，QPS：{}", i, count, count / i);
             }
 
         };
         new Thread(r).start();
+    }
 
+    private static void startRequest(DruidDataSource dataSource, String sql, int min, int max) {
+        // 请求数据库线程
         Runnable runnable = () -> {
-//            System.out.println("线程" + Thread.currentThread().getName() + "启动！");
             Connection conn = null;
             for (int i = min; i <= max; i++) {
+                // 一个循环模拟一次请求
                 try {
                     // 执行语句
                     conn = dataSource.getConnection();
                     PreparedStatement pst = conn.prepareStatement(sql);
-                    count++;
                     pst.setInt(1, i);
+                    if (sql.contains("dataNodeId")) {
+                        int dataNodeId = Integer.parseInt((i + "").substring(2, 3));
+                        pst.setInt(2, dataNodeId);
+                    }
+//                    count++;
                     pst.execute();
-                    conn.close();
                 } catch (GetConnectionTimeoutException e) {
-                    System.out.println(Thread.currentThread().getName() + "线程连接超时！");
+                    logger.error("线程{}连接超时！", Thread.currentThread().getName(), e);
+//                    System.out.println(Thread.currentThread().getName() + "线程连接超时！");
                 } catch (SQLException e) {
-                    System.out.println(Thread.currentThread().getName() + "线程执行sql发生异常！");
+                    logger.error("线程{}执行sql发生异常", Thread.currentThread().getName(), e);
+//                    System.out.println(Thread.currentThread().getName() + "线程执行sql发生异常！");
+                } finally {
+                    try {
+                        conn.close();
+                    } catch (SQLException e) {
+                        logger.error("close connection error:", e);
+
+                    }
                 }
             }
-            System.out.println("线程" + Thread.currentThread().getName() + "运行结束！");
+            logger.warn("线程{}运行结束！", Thread.currentThread().getName());
         };
 
-        int threadNumber = Integer.parseInt(prop.getProperty("threadNumber"));
-        for (int i = 0; i < threadNumber; i++) {
-            new Thread(runnable).start();
-        }
-
+        new Thread(runnable).start();
     }
-
 }
