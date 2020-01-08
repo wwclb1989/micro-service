@@ -4,6 +4,7 @@ import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.sql.*;
 
@@ -12,15 +13,22 @@ public class Test12 {
     public static final String HOST = "172.18.5.200";   // 主机
     public static final String PORT = "8066";           // mysql端口号
     public static final String[] DB_NAME = {
-            "activity", "carorder", "carorderstats", "channelservice", "confservice",
-            "driver", "driverstats", "fileexport", "finance", "manager",
+            "activity", "carlife", "carorder", "carorderstats", "channelservice", "chargingservice", "confservice",
+            "driver", "driverstats", "driving", "fileexport", "finance", "manager",
             "mapservice", "openplatform", "orgservice", "passenger", "paygateway",
-            "recommend", "safecenter", "thirdplatform", "traffic", "workflow"
+            "recommend", "safecenter", "traffic", "workflow"
     };    // 数据库名称
     public static final String USERNAME = "wanshun";    // 用户
     public static final String PASSWORD = "Hi1uwT3SiILdX#2LGYAf";     // 密码
 
     public static final String DIRECTORYPATH = "F://table/";      // 输出路径
+
+    static {
+        File file = new File(DIRECTORYPATH);
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+    }
 
     public static void main(String[] args) {
 
@@ -38,8 +46,8 @@ public class Test12 {
                     continue;
                 }
                 //3.操作数据库，实现增删改查,show tables
-                PreparedStatement pst = conn.prepareStatement("show tables");
-//                PreparedStatement pst = conn.prepareStatement("select table_name,table_comment from information_schema.tables where table_schema = '" + dbname + "'");
+//                PreparedStatement pst = conn.prepareStatement("show tables");
+                PreparedStatement pst = conn.prepareStatement("select table_name,table_comment from information_schema.tables where table_schema = '" + dbname + "'");
 
                 String filePath = DIRECTORYPATH + dbname + ".xls";   // 文件路径，一个数据库一个文件
                 FileOutputStream out = new FileOutputStream(filePath);  // 文件输出流
@@ -58,8 +66,8 @@ public class Test12 {
                 while (resultSet.next()) {
                     // 表名
                     String tableName = resultSet.getString(1);
-//                    String tableComment = resultSet.getString(2);
-                    String tableComment = null;
+                    String tableComment = resultSet.getString(2);
+//                    String tableComment = null;
                     if (tableComment == null || tableComment.equals("")) {
                         tableComment = "无";
                     }
