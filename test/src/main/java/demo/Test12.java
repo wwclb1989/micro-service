@@ -10,16 +10,16 @@ import java.sql.*;
 
 public class Test12 {
 
-    public static final String HOST = "172.18.5.200";   // 主机
+    public static final String HOST = "172.18.5.53";   // 主机
     public static final String PORT = "8066";           // mysql端口号
     public static final String[] DB_NAME = {
-            "activity", "carlife", "carorder", "carorderstats", "channelservice", "chargingservice", "confservice",
+            "activity", "carlife", "carorder", "carorderstats", "channelservice", "chargingService", "confservice",
             "driver", "driverstats", "driving", "fileexport", "finance", "manager",
             "mapservice", "openplatform", "orgservice", "passenger", "paygateway",
-            "recommend", "safecenter", "traffic", "workflow"
-    };    // 数据库名称
-    public static final String USERNAME = "wanshun";    // 用户
-    public static final String PASSWORD = "Hi1uwT3SiILdX#2LGYAf";     // 密码
+            "recommend", "safecenter", "workflow"
+    };    // 数据库名称，严格区分大小写
+    public static final String USERNAME = "wanshunselect";    // 用户
+    public static final String PASSWORD = "WKNgTBw{_O5-]aB\\Ix";     // 密码
 
     public static final String DIRECTORYPATH = "F://table/";      // 输出路径
 
